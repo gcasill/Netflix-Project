@@ -4,6 +4,8 @@ The project looked to analyze a dataset and create a visualization dashboard to 
 
 The data used in the analysis was a dataset compiled and scraped by Shivam Bansal from flixable.com and hosted on Kaggle. The dataset focused on Netflix’s current holdings—as of 2020—in the data fields of title, release date, country, genre the production was listed in, type of production, runtime, maturity rating, cast, producer, and description.The original dataset did not contain viewer ratings. In order to further explore the dataset, two smaller datasets were created tabularly and introduced—IMDB’s Top 10 Movies, and IMDB’s Top 10 TV Shows. The two datasets were of current—2021—rankings and did not specifiy the collection date or how many viewers had ranked the items in the lists.
 
+OpenRefine was used to clean and split the original data (netflix.csv) and saved as an additional file (net.csv).
+
 # Citation
 
 APA
