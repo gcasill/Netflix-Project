@@ -1,0 +1,575 @@
+---
+title: "Netflix Productions and IMDB"
+author: "Gabriel Casillas and Peter Melling"
+date: "5/31/2021"
+output: flexdashboard::flex_dashboard
+orientation: rows
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE, echo=FALSE}
+library(tidyverse)
+library(readr)
+library(corrplot)
+library(RColorBrewer)
+library(dplyr)
+library(ggplot2)
+library(htmlwidgets)
+library(maps)
+library(hrbrthemes)
+```
+```{r, echo=FALSE}
+netflix <- read.csv('netflix.csv')
+net <- read.csv('net.csv')
+
+```
+# Netflix
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+The dataset focused on Netflix’s current holdings—as of 2020—in the data fields of title, release date, country, genre the production was listed in, type of production, runtime, maturity rating, cast, producer, and description.
+
+The original dataset did not contain viewer ratings. In order to further explore the dataset, two smaller datasets were created tabularly and introduced—IMDB’s Top 10 Movies, and IMDB’s Top 10 TV Shows.
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  Tools and Packages
+
+    
+The tools that were used were RStudio, RMarkdown, Shiny, and OpenRefine. OpenRefine was used to clean the data; countries and genres were split on separators and filled down. RStudio was used to create, analyze, and run the script and generate visualizations. RMarkdown was used to create an HTML document. Shiny was used to create a series of stories within a dashboard to display the different questions and visualizations from the analysis.
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  Questions
+ 
+
+1.	What is the correlation between runtime and country? What is the relationship between runtime and type of production?
+2.	Which countries are the most represented on Netflix? Of the most represented countries, what is the split between TV shows and movies?
+3.	Which countries are represented in co-productions? Which type of production is co-produced the most?
+4.	How long do TV shows run on Netflix? What is the correlation between number of seasons, genre, and country?
+5.	What is the correlation between IMDB popularity ratings with Netflix release year? How often are Netflix productions reflected in IMDB’s Top Rated?
+
+# 1. Country of Origin and Runtime
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+There are 110 countries represented within Netflix's listings, with a wide variety of movies from each nation. There is an outlier in the dataset that had a null classification of country. Despite assumptions to the contrary, there is no apparent correlation between the runtime of movies and their country of origin.
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  1
+
+```{r include=FALSE, echo=FALSE}
+
+movies <- filter(net, type == "Movie")
+movies$runtime <- gsub("min","", movies$duration)
+as.numeric(movies$runtime)
+movies_cleaned <- movies[order(movies$runtime),]
+```
+
+```{r echo=FALSE}
+# 1
+
+# scatter
+ggplot(movies_cleaned,aes(x=country, y=runtime, color=country, size=duration)) +
+  geom_point() +
+  labs(title="Netflix Movie Origins",
+       x="Country", y="Runtime") +
+  theme(legend.position="none",
+        axis.text.x = element_text( 
+                           size=6, angle=45),
+          axis.text.y = element_text( 
+                           size=4.5))
+```
+    
+
+
+# 2. International Representation
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+There are 110 countries represented within Netflix's listings, with a wide variety of both TV shows and movies. There is an outlier in the dataset that had a null classification of country. For the ten most represented countries on the platform, more movies are present on the platform than TV shows. 
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  2a. What are the top-ten most represented countries on Netflix?
+
+```{r include=FALSE, echo=FALSE}
+
+country_count <- count(net, country, sort = TRUE)
+country_count_sort <- country_count [1:10,]
+country_count_sort
+```
+
+```{r echo=FALSE, results='asis'}
+library(knitr)
+kable(country_count_sort)
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  2a
+ 
+```{r echo=FALSE}
+# 2a
+ggplot(country_count_sort, aes(fill=country, y=n, x=country))+
+  geom_bar(postion="dodge", stat="identity")+
+  labs(title="Top Ten Most-Represented Countries on Netflix", x="Country", y="Amount of Media")+
+  scale_fill_manual("country", values = c("Canada" = "red", "France" = "blue", "Germany" = "green", "India" = "orange1", "Japan" = "purple", "Mexico" = "darkgreen", "South Korea" = "brown4", "Spain" = "yellow", "United Kingdom" = "grey50", "United States" = "navy"))
+```
+
+# International Representation
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+There are 110 countries represented within Netflix's listings, with a wide variety of both TV shows and movies. There is an outlier in the dataset that had a null classification of country. For the ten most represented countries on the platform, more movies are present on the platform than TV shows. 
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  2b. Of these countries, what is the split between TV shows and movies??
+
+```{r include=FALSE, echo=FALSE}
+
+country_count_type <- count(net, country, type, sort = TRUE)
+country_count_split <- merge(country_count_sort, country_count_type, by = c("country"))
+country_count_split
+```
+
+```{r echo=FALSE, results='asis'}
+library(knitr)
+kable(country_count_split)
+```
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  2b
+
+```{r echo=FALSE}
+# 2b
+ggplot(country_count_split, aes(fill=country, y=n.y, x=type))+
+  geom_bar(postion="dodge", stat="identity")+
+  labs(title="Movies and TV Shows of the Top Ten", x="Type", y="Amount of Media")+ 
+  scale_fill_manual("country", values = c("Canada" = "red", "France" = "blue", "Germany" = "green", "India" = "orange1", "Japan" = "purple", "Mexico" = "darkgreen", "South Korea" = "brown4", "Spain" = "yellow", "United Kingdom" = "grey50", "United States" = "navy"))
+```
+
+
+# 3. International Co-Production
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+There are 659 unique productions that include multiple countries having produced a TV Show or Movie together. There is an outlier in the dataset that had a null type of TV Show or Movie. Out of the previous productions that are co-produced, Netflix contains more movies that are co-produced among multiple nations.
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+###  3a. How many listings are international co-productions?
+
+```{r include=FALSE, echo=FALSE}
+
+class_count <- dplyr::count(netflix, type, country)
+class_count
+```
+```{r echo=FALSE}
+
+ggplot(class_count, aes(x=type, y=n)) +
+  geom_bar(stat = "identity") +
+  labs(title="Netflix Movies and TV Shows",
+       x="Type", y="Count")
+```
+
+```{r echo=FALSE}
+# 3a
+ggplot(net, aes(fill=type, y=country, x=type)) + 
+  geom_bar(position="dodge", stat="identity") +
+  labs(title="Netflix Movies and TV Shows",
+       x="Type of Production", y="Country of Origin")
+```
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### 3b. Do movies or TV shows get co-produced the most?
+
+
+```{r include=FALSE, echo=FALSE}
+class_count <- dplyr::count(netflix, type, country)
+class_count
+
+tr <- class_count %>%
+  filter_all(any_vars(grepl(',', .)))
+```
+
+```{r echo=FALSE}
+ggplot(tr, aes(x=type, y=n)) +
+  geom_bar(stat = "identity") +
+  labs(title="Netflix Co-Produced Movies and TV Shows",
+       x="Type", y="Count")
+```
+
+# 4. Netflix Shows
+
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+     
+Most shows that Netflix offers are found to only have one or two seasons at most. The data did not take into account whether these shows were created for Netflix, are being hosted on Netflix, if the shows have been cancelled, or if the shows are currently in production or have been greenlit for further production.
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### 4a. How long do most shows run on Netflix?
+
+```{r include=FALSE, echo=FALSE}
+runn <- filter(netflix, type == "TV Show")
+```
+
+```{r echo=FALSE}
+ggplot(runn, aes(x=duration)) +
+  geom_bar(fill="#69b3a2", color="#69b3a2") +
+  labs(title="Netflix TV Show Seasons",
+       x="Number of Seasons", y="Number of Shows") +
+  theme(axis.text.x = element_text( 
+                           size=10, angle=45),
+          axis.text.y = element_text( 
+                           size=8))
+```
+
+
+# Netflix Show Seasons
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+ 
+<br>
+<br>
+<br>
+<br>
+
+The genres of shows that Netflix hosts and produces are a wide range.They also differ widely across the number of seasons for each show. The first graph displays the more popular genres at the bottom. The thickness of the bar graph shows the amount of shows within that genre. Genres that do not have many seasons can be viewed at the top of the graph and the thickness of the individual bars.
+
+The second graph shows the individual countries that host or produce content for Netflix. Many countries only produce a small number of seasons for a show, which can be viewed as the thinner portions of the colored bars in the graph. The countries that produce the most content are found along the bottom of the graph.
+
+
+
+Row
+-----------------------------------------------------------------------
+
+
+<br>
+<br>
+<br>
+<br>
+
+### 4b. Is there a correlation between show seasons and genre?
+
+```{r include=FALSE, echo=FALSE}
+genre <- filter(net, type == "TV Show")
+```
+
+```{r echo=FALSE}
+ggplot(genre, aes(fill=duration, y=listed_in, x=duration)) + 
+  geom_bar(position="dodge", stat="identity") +
+  labs(title="Netflix TV Show Genres",
+       x="Number of Seasons", y="Genres") +
+  theme(axis.text.x = element_text( 
+                           size=10, angle=45),
+          axis.text.y = element_text( 
+                           size=8))
+```
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### 4c. Is there a correlation between show seasons and country of origin?
+
+```{r include=FALSE, echo=FALSE}
+origin <- filter(net, type == "TV Show")
+```
+
+```{r echo=FALSE}
+# bar graph
+ggplot(origin, aes(fill=duration, y=country, x=duration)) + 
+  geom_bar(position="dodge", stat="identity") +
+  labs(title="Netflix TV Show Countries",
+       x="Number of Seasons", y="Country") +
+  theme(axis.text.x = element_text( 
+                           size=10, angle=45),
+          axis.text.y = element_text( 
+                           size=6))
+```
+
+
+# Netflix Countries
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+
+<br>
+<br>
+<br>
+<br>
+
+
+Netflix hosts and produces many TV shows across the world. A large portion of the shows produced only have a few seasons. The graph depicts how many seasons of a show a country produces. The more size of the points corresponds to the number of shows that country may have--the smaller the point, the greater the number of shows; the larger the point, the fewer the number of shows. Very few countries produce content after the first five seasons of a show.
+
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### 4c.
+
+```{r echo=FALSE}
+# scatter
+ggplot(origin,
+       aes(x=duration,
+           y=country,
+           color=country,
+           size=duration)) +
+  geom_point() +
+  labs(title="Netflix TV Show Origins",
+       x="Number of Seasons", y="Country") +
+  theme(legend.position="none",
+        axis.text.x = element_text( 
+                           size=6, angle=45),
+          axis.text.y = element_text( 
+                           size=4.5))
+```
+
+
+
+
+# 5. Netflix and IMDB
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>  
+<br>
+<br>
+
+Out of both TV Shows and Movies that Netflix hosts on their service, these are the only titles in the right table that have been rated to be within the Top 10 on IMDB.
+
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### Top 10 TV Shows on IMDB
+
+```{r include=FALSE, echo=FALSE}
+title <- c("Planet Earth II", "Planet Earth", "Band of Brothers", "Breaking Bad", "Chernobyl", "The Wire", "Blue Planet II", "Our Planet", "Cosmos: A Spacetime Odyssey", "Cosmos")
+type <- c("TV Show", "TV Show", "TV Show", "TV Show", "TV Show", "TV Show", "TV Show", "TV Show", "TV Show", "TV Show")
+release_year <- c(2016, 2006, 2001, 2008, 2019, 2002, 2017, 2019, 2014, 1980)
+rated <- c(9.5, 9.4, 9.4, 9.4, 9.3, 9.3, 9.3, 9.3, 9.2, 9.2)
+from <- c("IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB")
+imdb_show <- data.frame(title, type, release_year, rated, from)
+```
+
+```{r echo=FALSE, results='asis'}
+library(knitr)
+kable(imdb_show)
+```
+
+<br>
+<br>
+<br>
+<br>
+
+### Top 10 Movies on IMDB
+
+```{r include=FALSE, echo=FALSE}
+title <- c("The Shawshank Redemption", "The Godfather", "The Godfather: Part II", "The Dark Knight", "12 Angry Men", "Schindler's List", "The Lord of the Rings: The Return of the King", "Pulp Fiction", "The Good, the Bad and the Ugly", "The Lord of the Rings: The Fellowship of the Ring")
+type <- c("Movie", "Movie", "Movie", "Movie", "Movie", "Movie", "Movie", "Movie", "Movie", "Movie")
+release_year <- c(1994, 1972, 1974, 2008, 1957, 1993, 2003, 1994, 1966, 2001)
+rated <- c(9.2, 9.1, 9.0, 9.0, 8.9, 8.9, 8.9, 8.8, 8.8, 8.8)
+from <- c("IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB", "IMDB")
+imdb_movie <- data.frame(title, type, release_year, rated, from)
+```
+
+```{r echo=FALSE, results='asis'}
+library(knitr)
+kable(imdb_movie)
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### Netflix Movies and TV Shows in IMDB's Top 10
+
+```{r include=FALSE, echo=FALSE}
+finaldt <- rbind(imdb_show, imdb_movie)
+```
+
+```{r echo=FALSE, results='asis'}
+new <- merge(finaldt, netflix, by = c("title", "type", "release_year"))
+newer <- select(new, -c("from", "show_id", "cast", "date_added", "description"))
+```
+
+```{r echo=FALSE, results='asis'}
+library(knitr)
+kable(newer)
+```
+
+# References
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+The dataset focused on Netflix’s current holdings—as of 2020—in the data fields of title, release date, country, genre the production was listed in, type of production, runtime, maturity rating, cast, producer, and description.
+
+The original dataset did not contain viewer ratings. In order to further explore the dataset, two smaller datasets were created tabularly and introduced—IMDB’s Top 10 Movies, and IMDB’s Top 10 TV Shows.
+
+Row
+-----------------------------------------------------------------------
+
+<br>
+<br>
+<br>
+<br>
+
+### References
+
+
+Bansal, S. (2020). Netflix. Kaggle. https://www.kaggle.com/shivamb/netflix-shows
+
+IMDB. (2021). IMDb top 250 movies. IMDB. https://www.imdb.com/chart/top?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=4da9d9a5-d299-43f2-9c53-f0efa18182cd&pf_rd_r=T4YW4W6DRTV4R7PN4SMA&pf_rd_s=right-4&pf_rd_t=15506&pf_rd_i=toptv&ref_=chttvtp_ql_3
+
+IMDB. (2021). IMDb top 250 tv shows. IMDB. https://www.imdb.com/chart/toptv?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=4da9d9a5-d299-43f2-9c53-f0efa18182cd&pf_rd_r=6BVQC60H3T168VTH020K&pf_rd_s=right-4&pf_rd_t=15506&pf_rd_i=top&ref_=chttp_ql_6
