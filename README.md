@@ -31,6 +31,8 @@ netflix dashboard.Rmd
 
 netflix_final.R
 
+netflix visualizations.zip
+
 # License
 
 CC0: Public Domain https://creativecommons.org/publicdomain/zero/1.0/
