@@ -18,12 +18,15 @@ IMDB. (2021). IMDb top 250 tv shows. IMDB. https://www.imdb.com/chart/toptv?pf_r
 # Netflix Files (Primary)
 
 net.csv
+
 netflix.csv
 
 # Netflix Files (Secondary)
 
 Casillas_Melling_Final Project Report.docx
+
 netflix dashboard.Rmd
+
 netflix_final.R
 
 # License
